@@ -19,10 +19,40 @@ This is where the starting place of the project and where the main code will be 
 ```java
 3      public class Main {
 4      
-5          public static void main(String[] args) {
+5          public static void main(String[] args) throws InterruptedException {
 6      	// write your code here
-7          }
-8      }
+7              Producer_consumer producerConsumer = new Producer_consumer();
+8      
+9              Thread t1 = new Thread(new Runnable(){
+10                 @Override
+11                 public void run(){
+12                     try {
+13                         producerConsumer.produce();
+14                     } catch (InterruptedException e) {
+15                         throw new RuntimeException(e);
+16                     }
+17                 }
+18             });
+19     
+20             Thread t2 = new Thread(new Runnable() {
+21                 @Override
+22                 public void run() {
+23                     try {
+24                         producerConsumer.consume();
+25                     } catch (InterruptedException e) {
+26                         throw new RuntimeException(e);
+27                     }
+28                 }
+29             });
+30     
+31             t1.start();
+32             t2.start();
+33     
+34             t1.join();
+35             t2.join();
+36         }
+37     }
+38     
 ```
 
 <br/>
@@ -41,23 +71,39 @@ This class will hold the methods for the producer and consumer to be used.
 6          LinkedList<Integer> testList = new LinkedList<>();
 7          int capacity = 2;
 8      
-9          public void produce() throws InterruptedException {
-10             int value = 0;
-11             while(true) {
-12                 synchronized (this){
-13                     while(testList.size() == capacity)
-14                         wait();
-15                     System.out.println("Producer produced-" + value);
-16     
-17                     testList.add(value++);
+9          public Producer_consumer(){}
+10     
+11         public void produce() throws InterruptedException {
+12             int value = 0;
+13             while(true) {
+14                 synchronized (this){
+15                     while(testList.size() == capacity)
+16                         wait();
+17                     System.out.println("Producer produced-" + value);
 18     
-19                     notify();
+19                     testList.add(value++);
 20     
-21                     Thread.sleep(1000);
-22                 }
-23             }
-24         }
-25     }
+21                     notify();
+22     
+23                     Thread.sleep(1000);
+24                 }
+25             }
+26         }
+27     
+28         public void consume() throws InterruptedException{
+29             while(true){
+30                 synchronized (this){
+31                     while(testList.size() == 0)
+32                         wait();
+33     
+34                     int val = testList.removeFirst();
+35     
+36                     System.out.println("Consumer consumed-" + val);
+37     
+38                     notify();
+39     
+40                     Thread.sleep(1000);
+41                 }
 ```
 
 <br/>
